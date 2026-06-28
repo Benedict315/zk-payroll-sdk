@@ -53,3 +53,6 @@ export type {
 
 // ── Typed Contract Clients ───────────────────────────────────────────────────
 export * from "./clients";
+
+// ── Contract Metadata ────────────────────────────────────────────────────────
+export * from "./metadata";
