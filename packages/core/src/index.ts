@@ -35,6 +35,9 @@ export * from "./types";
 export * from "./crypto/IProofGenerator";
 export * from "./adapters";
 
+// ── Wallet Adapters ─────────────────────────────────────────────────────────
+export * from "./wallets";
+
 // ── Testing Utilities ───────────────────────────────────────────────────────
 export * from "./testing";
 export { TransactionWatcher } from "./events";
