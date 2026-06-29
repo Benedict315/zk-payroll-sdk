@@ -108,6 +108,41 @@ describe("TransactionWatcher", () => {
         "Network failure"
       );
     });
+
+    it("aborts polling immediately if signal is already aborted", async () => {
+      const server = createMockServer([NOT_FOUND_RESPONSE]);
+      const watcher = new TransactionWatcher(server);
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(
+        watcher.waitForConfirmation("tx_hash_abort", {
+          pollIntervalMs: 10,
+          signal: controller.signal,
+        })
+      ).rejects.toThrow("Polling for transaction tx_hash_abort was cancelled.");
+
+      expect(server.getTransaction).not.toHaveBeenCalled();
+    });
+
+    it("aborts polling while sleeping if signal is aborted", async () => {
+      const server = createMockServer([NOT_FOUND_RESPONSE]);
+      const watcher = new TransactionWatcher(server);
+      const controller = new AbortController();
+
+      // Schedule abort during the sleep of the first poll
+      setTimeout(() => controller.abort(), 15);
+
+      await expect(
+        watcher.waitForConfirmation("tx_hash_abort_sleep", {
+          pollIntervalMs: 50,
+          signal: controller.signal,
+        })
+      ).rejects.toThrow("Polling for transaction tx_hash_abort_sleep was cancelled.");
+
+      // Polling sleeps before hitting the server, so it should not have been called
+      expect(server.getTransaction).not.toHaveBeenCalled();
+    });
   });
 
   describe("event emitter", () => {
@@ -192,6 +227,29 @@ describe("TransactionWatcher", () => {
 
       expect(emittedError).not.toBeNull();
       expect(emittedError!.message).toBe("RPC down");
+    });
+
+    it("emits 'cancelled' when polling is aborted", async () => {
+      const server = createMockServer([NOT_FOUND_RESPONSE]);
+      const watcher = new TransactionWatcher(server);
+      const controller = new AbortController();
+      let cancelledData: unknown = null;
+
+      watcher.on("cancelled", (data) => {
+        cancelledData = data;
+      });
+
+      controller.abort();
+      await watcher
+        .waitForConfirmation("tx_hash", {
+          pollIntervalMs: 10,
+          signal: controller.signal,
+        })
+        .catch(() => {});
+
+      expect(cancelledData).toMatchObject({
+        txHash: "tx_hash",
+      });
     });
   });
 });
