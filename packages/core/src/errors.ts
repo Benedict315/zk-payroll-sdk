@@ -75,6 +75,29 @@ export class ValidationError extends ZkPayrollError {
   }
 }
 
+export class WalletError extends ZkPayrollError {
+  constructor(
+    message: string,
+    code: string,
+    public walletId?: string,
+    context: Record<string, any> = {}
+  ) {
+    super(message, code, context);
+    this.name = "WalletError";
+  }
+}
+
+export class SerializationError extends ZkPayrollError {
+  constructor(
+    message: string,
+    code: any = "SERIALIZATION_FAILED",
+    context: Record<string, any> = {}
+  ) {
+    super(message, code, context);
+    this.name = "SerializationError";
+  }
+}
+
 // Error codes for Soroban RPC failures
 export const ContractErrorCode = {
   SIMULATION_FAILED: "SIMULATION_FAILED",
@@ -97,6 +120,21 @@ export const PayrollServiceErrorCode = {
 
 export type PayrollServiceErrorCode =
   (typeof PayrollServiceErrorCode)[keyof typeof PayrollServiceErrorCode];
+
+/**
+ * Wallet error codes
+ */
+export const WalletErrorCode = {
+  NOT_INSTALLED: "WALLET_NOT_INSTALLED",
+  NOT_CONNECTED: "WALLET_NOT_CONNECTED",
+  CONNECTION_REJECTED: "WALLET_CONNECTION_REJECTED",
+  SIGNING_REJECTED: "WALLET_SIGNING_REJECTED",
+  NETWORK_MISMATCH: "WALLET_NETWORK_MISMATCH",
+  INVALID_XDR: "WALLET_INVALID_XDR",
+  UNKNOWN_ERROR: "WALLET_UNKNOWN_ERROR",
+} as const;
+
+export type WalletErrorCode = (typeof WalletErrorCode)[keyof typeof WalletErrorCode];
 
 /**
  * Maps a generic error or RPC response code into a structured ContractExecutionError

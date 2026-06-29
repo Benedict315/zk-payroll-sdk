@@ -256,6 +256,7 @@ Each `DiagnosticEntry` contains:
 ## Documentation
 
 - [API Reference](./docs/API.md) - Complete API documentation
+- [Error Handling](./docs/ERRORS.md) - Public error hierarchy and recovery patterns
 - [ZK Proof Generation](./docs/ZK_PROOF_GENERATION.md) - Detailed proof generation guide
 - [Versioning & Compatibility](./docs/VERSIONING.md) - SDK semantic versioning and contract compatibility matrix
 - [SDK Migration Cookbook](./docs/SDK_MIGRATION_COOKBOOK.md) - Step-by-step upgrade checklist and migration patterns
