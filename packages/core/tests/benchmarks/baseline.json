@@ -41,7 +41,7 @@
       "peakHeapUsedMB": 462.1657943725586,
       "avgArrayBuffersDeltaMB": 0,
       "avgExternalDeltaMB": 0,
-      "avgDurationMs": 0
+      "avgDurationMs": 0.2
     },
     {
       "scenario": "cold_proof_small",
@@ -51,7 +51,7 @@
       "peakHeapUsedMB": 462.4555130004883,
       "avgArrayBuffersDeltaMB": 1.430511474609375,
       "avgExternalDeltaMB": 1.430511474609375,
-      "avgDurationMs": 0.6666666666666666
+      "avgDurationMs": 2.6666666666666665
     },
     {
       "scenario": "cold_proof_medium",
