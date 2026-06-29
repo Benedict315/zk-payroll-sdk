@@ -15,6 +15,16 @@ export interface ConfirmationOptions {
   pollIntervalMs?: number;
   /** Maximum polling attempts before timeout (default: 15) */
   maxPolls?: number;
+  /**
+   * Optional request ID for correlating submission and polling flows.
+   * Use `RunIdentifier.generateRequestId()` to create a deterministic
+   * ID, or `RunIdentifier.generateCorrelationId()` to link this poll
+   * to a session-level run.
+   *
+   * When provided, the ID is included in all emitted events and
+   * error messages, making distributed tracing easier.
+   */
+  requestId?: string;
 }
 
 /**
@@ -29,6 +39,11 @@ export interface ConfirmationResult {
   ledger?: number;
   /** The raw return value from the transaction (if successful) */
   returnValue?: rpc.Api.GetSuccessfulTransactionResponse["returnValue"];
+  /**
+   * Optional request ID used during polling, for correlating
+   * this confirmation result back to the original submission.
+   */
+  requestId?: string;
 }
 
 /**
@@ -36,7 +51,7 @@ export interface ConfirmationResult {
  */
 export type TransactionWatcherEvents = {
   /** Emitted on each poll attempt */
-  polling: [{ txHash: string; attempt: number; maxPolls: number }];
+  polling: [{ txHash: string; attempt: number; maxPolls: number; requestId?: string }];
   /** Emitted when the transaction is confirmed (success or failure) */
   confirmed: [ConfirmationResult];
   /** Emitted when polling times out */
@@ -85,10 +100,12 @@ export class TransactionWatcher extends EventEmitter {
     const pollInterval = options?.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
     const maxPolls = options?.maxPolls ?? DEFAULT_MAX_POLLS;
 
+    const requestId = options?.requestId;
+
     for (let attempt = 1; attempt <= maxPolls; attempt++) {
       await sleep(pollInterval);
 
-      this.emit("polling", { txHash, attempt, maxPolls });
+      this.emit("polling", { txHash, attempt, maxPolls, requestId });
 
       let txResponse: rpc.Api.GetTransactionResponse;
       try {
@@ -106,6 +123,7 @@ export class TransactionWatcher extends EventEmitter {
           status: "SUCCESS",
           ledger: successResponse.ledger,
           returnValue: successResponse.returnValue,
+          requestId,
         };
         this.emit("confirmed", result);
         return result;
@@ -115,10 +133,11 @@ export class TransactionWatcher extends EventEmitter {
         const failResult: ConfirmationResult = {
           txHash,
           status: "FAILED",
+          requestId,
         };
         this.emit("confirmed", failResult);
         throw new ContractExecutionError(
-          `Transaction ${txHash} failed on-chain`,
+          `Transaction ${txHash} failed on-chain${requestId ? ` [requestId: ${requestId}]` : ""}`,
           ContractErrorCode.CONTRACT_REVERT
         );
       }
@@ -129,7 +148,7 @@ export class TransactionWatcher extends EventEmitter {
     // Timed out
     this.emit("timeout", { txHash, attempts: maxPolls });
     throw new ContractExecutionError(
-      `Transaction ${txHash} timed out after ${maxPolls} polls`,
+      `Transaction ${txHash} timed out after ${maxPolls} polls${requestId ? ` [requestId: ${requestId}]` : ""}`,
       ContractErrorCode.TRANSACTION_TIMEOUT
     );
   }
