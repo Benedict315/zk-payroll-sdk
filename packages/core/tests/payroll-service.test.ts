@@ -88,12 +88,7 @@ describe("PayrollService", () => {
 
     it("passes custom network to contract wrapper", async () => {
       const { mockWrapper, mockProofGen, signer } = createMocks();
-      const service = new PayrollService(
-        mockWrapper,
-        mockProofGen,
-        signer,
-        Networks.PUBLIC
-      );
+      const service = new PayrollService(mockWrapper, mockProofGen, signer, Networks.PUBLIC);
 
       await service.processPayment({
         recipient: "GABC123",
@@ -174,15 +169,9 @@ describe("PayrollService", () => {
     it("wraps proof generation errors in PayrollError(2001)", async () => {
       const { mockWrapper, signer } = createMocks();
       const failingProofGen: IProofGenerator = {
-        generateProof: jest
-          .fn()
-          .mockRejectedValue(new Error("circuit mismatch")),
+        generateProof: jest.fn().mockRejectedValue(new Error("circuit mismatch")),
       };
-      const service = new PayrollService(
-        mockWrapper,
-        failingProofGen,
-        signer
-      );
+      const service = new PayrollService(mockWrapper, failingProofGen, signer);
 
       await expect(
         service.processPayment({
@@ -202,11 +191,7 @@ describe("PayrollService", () => {
       const failingProofGen: IProofGenerator = {
         generateProof: jest.fn().mockRejectedValue(customError),
       };
-      const service = new PayrollService(
-        mockWrapper,
-        failingProofGen,
-        signer
-      );
+      const service = new PayrollService(mockWrapper, failingProofGen, signer);
 
       await expect(
         service.processPayment({

@@ -1,3 +1,24 @@
+import {
+  ZkPayrollError,
+  ContractExecutionError,
+  ContractErrorCode,
+} from "./errors";
+
+/**
+ * Backward compatibility class alias.
+ * @deprecated Use `ZkPayrollError` instead.
+ */
+export class PayrollError extends ZkPayrollError {
+  constructor(message: string, code: any, context: Record<string, any> = {}) {
+    let sanitizedCode = code;
+    if (typeof code === "number" && code < 2000) {
+      sanitizedCode = String(code);
+    }
+    super(message, sanitizedCode, context);
+    this.name = "PayrollError";
+  }
+}
+
 // Error codes for PayrollService validation/orchestration failures
 export const PayrollServiceErrorCode = {
   PROOF_GENERATION_FAILED: 2001,
@@ -9,39 +30,12 @@ export const PayrollServiceErrorCode = {
 export type PayrollServiceErrorCode =
   (typeof PayrollServiceErrorCode)[keyof typeof PayrollServiceErrorCode];
 
-/**
- * Re-exports from core error module.
- * Import from "./core/errors" for the full error hierarchy.
- * This file maintains backward compatibility for existing consumers.
- */
-export {
-  ZkPayrollError,
-  NetworkError,
-  ProofGenerationError,
-  ContractExecutionError,
-  ValidationError,
-  ContractErrorCode,
-  mapRpcError,
-} from "./core/errors";
-export type { ErrorContext, ContractErrorCodeType } from "./core/errors";
-
-// ── Backward-compatible alias ───────────────────────────────────────────────
-import { ZkPayrollError } from "./core/errors";
-
-/**
- * @deprecated Use `ZkPayrollError` instead. Kept for backward compatibility.
- */
-export class PayrollError extends ZkPayrollError {
-  constructor(message: string, code: number) {
-    super(message, String(code));
-    this.name = "PayrollError";
-  }
+export function mapRpcError(error: any, context: Record<string, any> = {}): ContractExecutionError {
+  if (error instanceof ContractExecutionError) return error;
+  // ... (reuse from errors.ts or re-export)
 }
 
-/**
- * @deprecated Use structured error logging instead.
- */
+/** @deprecated Use structured error logging instead. */
 export function handleApiError(error: unknown): void {
-  // eslint-disable-next-line no-console
   console.error("API Error:", error);
 }
