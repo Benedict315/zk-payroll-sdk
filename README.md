@@ -10,17 +10,37 @@ npm install @zk-payroll/sdk
 
 ## Usage
 
+The SDK provides configuration presets for common environments to simplify initialization:
+
 ```typescript
-import { PayrollService, DEFAULT_CONFIG } from "@zk-payroll/sdk";
+import { PayrollService, ConfigPresets } from "@zk-payroll/sdk";
+
+// Initialize config for a specific environment
+const config = ConfigPresets.testnet()
+  .withContractId("CCONTRACT_ID...")
+  .withProofConfig({
+    wasmUrl: "https://cdn.example.com/payroll_circuit.wasm",
+    zkeyUrl: "https://cdn.example.com/payroll_circuit.zkey",
+  })
+  .build(); // Validates required fields
 
 // Initialize service
-const service = new PayrollService(DEFAULT_CONFIG);
+const service = new PayrollService(config);
 
 // Process a private payment
 await service.processPayment(
   "G...", // Recipient Stellar address
   1000n   // Amount
 );
+```
+
+### Configuration Validations
+
+The `ConfigBuilder` fails fast if required configuration is missing or malformed:
+
+```typescript
+// Throws Error: "Configuration validation failed:\n- contractId is malformed: invalid_id"
+ConfigPresets.testnet().withContractId("invalid_id").build();
 ```
 
 ## Features
@@ -237,6 +257,8 @@ Each `DiagnosticEntry` contains:
 
 - [API Reference](./docs/API.md) - Complete API documentation
 - [ZK Proof Generation](./docs/ZK_PROOF_GENERATION.md) - Detailed proof generation guide
+- [Versioning & Compatibility](./docs/VERSIONING.md) - SDK semantic versioning and contract compatibility matrix
+- [SDK Migration Cookbook](./docs/SDK_MIGRATION_COOKBOOK.md) - Step-by-step upgrade checklist and migration patterns
 - [Troubleshooting](./docs/TROUBLESHOOTING.md) - Solutions for common CI, dependency, and environment issues
 
 ## Development
