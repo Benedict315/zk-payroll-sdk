@@ -31,11 +31,11 @@ export class PayrollError extends ZkPayrollError {
     super(message, String(code));
     this.name = "PayrollError";
   }
+
+  return new ContractExecutionError(message, code, context);
 }
 
-/**
- * @deprecated Use structured error logging instead.
- */
+/** @deprecated Use structured error logging instead. */
 export function handleApiError(error: unknown): void {
   // eslint-disable-next-line no-console
   console.error("API Error:", error);

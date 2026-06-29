@@ -37,7 +37,35 @@ export * from "./types";
 export * from "./crypto/IProofGenerator";
 export * from "./adapters";
 
+// ── Wallet Adapters ─────────────────────────────────────────────────────────
+export * from "./wallets";
+// ── Logging ─────────────────────────────────────────────────────────────────
+export * from "./logging";
+
+// ── Batch Utilities ─────────────────────────────────────────────────────────
+export * from "./batch";
+
 // ── Testing Utilities ───────────────────────────────────────────────────────
 export * from "./testing";
+
+// ── Events ──────────────────────────────────────────────────────────────────
 export { TransactionWatcher } from "./events";
 export type { ConfirmationOptions, ConfirmationResult } from "./events";
+
+// ── Typed Contract Clients ───────────────────────────────────────────────────
+export * from "./clients";
+
+// ── Environment Sanity Checker ──────────────────────────────────────────────
+export * from "./sanity";
+
+// ── Transaction Simulation ──────────────────────────────────────────────────
+export * from "./simulation";
+
+// ── Draft Persistence ───────────────────────────────────────────────────────
+export * from "./draft";
+
+// ── History Filter Builders ─────────────────────────────────────────────────
+export * from "./filters";
+
+// ── Redaction Utilities ─────────────────────────────────────────────────────
+export * from "./redaction";
