@@ -37,7 +37,12 @@ export class PaymentExecutorClient extends BaseContractWrapper {
       nativeToScVal(request.memo ?? "", { type: "string" }),
     ];
 
-    const result = await this.invoke("execute", args, toISigner(signer), network ?? this.networkPassphrase);
+    const result = await this.invoke(
+      "execute",
+      args,
+      toISigner(signer),
+      network ?? this.networkPassphrase
+    );
     return { txHash: this.scValToHex(result) };
   }
 
@@ -54,7 +59,12 @@ export class PaymentExecutorClient extends BaseContractWrapper {
       nativeToScVal(request.memo ?? "", { type: "string" }),
     ];
 
-    const result = await this.invoke("schedule", args, toISigner(signer), network ?? this.networkPassphrase);
+    const result = await this.invoke(
+      "schedule",
+      args,
+      toISigner(signer),
+      network ?? this.networkPassphrase
+    );
     return { paymentId: this.scValToBigInt(result) };
   }
 

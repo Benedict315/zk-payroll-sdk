@@ -31,7 +31,12 @@ export class ProofVerifierClient extends BaseContractWrapper {
       nativeToScVal(verificationKeyId, { type: "u32" }),
     ];
 
-    const result = await this.invoke("verify", args, toISigner(signer), network ?? this.networkPassphrase);
+    const result = await this.invoke(
+      "verify",
+      args,
+      toISigner(signer),
+      network ?? this.networkPassphrase
+    );
     return result.b() === true;
   }
 
