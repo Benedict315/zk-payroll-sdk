@@ -33,19 +33,10 @@ export interface WorkerProofOptions {
  */
 export interface WorkerLike {
   postMessage(message: WorkerRequest): void;
-  addEventListener(
-    type: "message",
-    listener: (event: { data: WorkerResponse }) => void
-  ): void;
+  addEventListener(type: "message", listener: (event: { data: WorkerResponse }) => void): void;
   addEventListener(type: "error", listener: (event: { message: string }) => void): void;
-  removeEventListener(
-    type: "message",
-    listener: (event: { data: WorkerResponse }) => void
-  ): void;
-  removeEventListener(
-    type: "error",
-    listener: (event: { message: string }) => void
-  ): void;
+  removeEventListener(type: "message", listener: (event: { data: WorkerResponse }) => void): void;
+  removeEventListener(type: "error", listener: (event: { message: string }) => void): void;
   terminate(): void;
 }
 
@@ -119,9 +110,7 @@ export class WorkerProofGenerator implements IProofGenerator {
       case "PROOF_ERROR":
         clearTimeout(pending.timer);
         this.pending.delete(msg.id);
-        pending.reject(
-          new PayrollError(`Worker proof generation failed: ${msg.message}`, 500)
-        );
+        pending.reject(new PayrollError(`Worker proof generation failed: ${msg.message}`, 500));
         break;
 
       case "PROGRESS":
@@ -150,20 +139,12 @@ export class WorkerProofGenerator implements IProofGenerator {
 
   // ── Dispatch helper ────────────────────────────────────────────────────────
 
-  private dispatch(
-    req: WorkerRequest,
-    onProgress?: ProofProgressCallback
-  ): Promise<ProofPayload> {
+  private dispatch(req: WorkerRequest, onProgress?: ProofProgressCallback): Promise<ProofPayload> {
     return new Promise<ProofPayload>((resolve, reject) => {
       const timeoutMs = this.options.timeoutMs ?? 120_000;
       const timer = setTimeout(() => {
         this.pending.delete(req.id);
-        reject(
-          new PayrollError(
-            `Proof generation timed out after ${timeoutMs}ms`,
-            408
-          )
-        );
+        reject(new PayrollError(`Proof generation timed out after ${timeoutMs}ms`, 408));
       }, timeoutMs);
 
       this.pending.set(req.id, {
@@ -217,9 +198,7 @@ export class WorkerProofGenerator implements IProofGenerator {
    * on the next proof generation request.
    */
   clearCache(): Promise<void> {
-    return this.dispatch({ type: "CLEAR_CACHE", id: this.nextId() }).then(
-      () => undefined
-    );
+    return this.dispatch({ type: "CLEAR_CACHE", id: this.nextId() }).then(() => undefined);
   }
 
   /**
