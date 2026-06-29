@@ -193,6 +193,7 @@ const payments = await client.getPendingPayments("G...", 0n, 20, signer);
 
 - [API Reference](./docs/API.md) - Complete API documentation
 - [ZK Proof Generation](./docs/ZK_PROOF_GENERATION.md) - Detailed proof generation guide
+- [Integration Patterns](./docs/INTEGRATION_PATTERNS.md) - Frontend and backend architecture diagrams
 
 ## Development
 
