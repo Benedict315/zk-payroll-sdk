@@ -41,7 +41,7 @@
       "peakHeapUsedMB": 313.94505310058594,
       "avgArrayBuffersDeltaMB": 0,
       "avgExternalDeltaMB": 0,
-      "avgDurationMs": 0
+      "avgDurationMs": 0.2
     },
     {
       "scenario": "cold_proof_small",
@@ -51,7 +51,7 @@
       "peakHeapUsedMB": 304.3654251098633,
       "avgArrayBuffersDeltaMB": 1.430511474609375,
       "avgExternalDeltaMB": 1.430511474609375,
-      "avgDurationMs": 0.6666666666666666
+      "avgDurationMs": 0.3333333333333333
     },
     {
       "scenario": "cold_proof_medium",
@@ -101,7 +101,7 @@
       "peakHeapUsedMB": 305.4983215332031,
       "avgArrayBuffersDeltaMB": 1.430511474609375,
       "avgExternalDeltaMB": 1.430511474609375,
-      "avgDurationMs": 1.3333333333333333
+      "avgDurationMs": 1
     },
     {
       "scenario": "batch_100_warm_artifacts",

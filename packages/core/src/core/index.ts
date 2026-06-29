@@ -4,3 +4,5 @@ export * from "../crypto/IProofGenerator";
 export * from "./errors";
 export * from "./retry";
 export * from "../cache";
+export * from "./retry";
+export * from "./idempotency";
