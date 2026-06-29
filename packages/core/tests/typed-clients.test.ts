@@ -1,4 +1,5 @@
 import { rpc, xdr, Keypair, Networks, StrKey, nativeToScVal, Address } from "@stellar/stellar-sdk";
+import type { ISigner } from "../src/signer/types";
 import { PayrollRegistryClient } from "../src/clients/PayrollRegistryClient";
 import { SalaryCommitmentClient } from "../src/clients/SalaryCommitmentClient";
 import { ProofVerifierClient } from "../src/clients/ProofVerifierClient";

@@ -5,8 +5,8 @@ import {
   Networks,
   BASE_FEE,
   xdr,
-  Keypair,
 } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
 import { ContractExecutionError, ContractErrorCode, mapRpcError } from "../errors";
 import { withRetry } from "../core";
 
@@ -43,7 +43,7 @@ export abstract class BaseContractWrapper {
    *
    * @param method   - Name of the contract function to call
    * @param args     - XDR-encoded arguments (use `nativeToScVal` from stellar-sdk)
-   * @param signer   - Keypair that signs the transaction
+   * @param signer   - Signer that provides the public key and signs the transaction
    * @param network  - Stellar network passphrase (defaults to testnet)
    * @returns        - The decoded XDR result value
    * @throws         - `ContractExecutionError` on any RPC or contract failure
@@ -51,7 +51,7 @@ export abstract class BaseContractWrapper {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
+    signer: ISigner,
     network: string = Networks.TESTNET
   ): Promise<xdr.ScVal> {
     try {
@@ -86,7 +86,7 @@ export abstract class BaseContractWrapper {
       // ── 4. Assemble: attach footprint and authorisation from simulation ─
       const preparedTx = rpc.assembleTransaction(rawTx, simResult).build();
 
-      preparedTx.sign(signer);
+      const signedTx = await signer.sign(preparedTx);
 
       // ── 5. Submit ──────────────────────────────────────────────────────
       const sendResult = await withRetry(() => this.server.sendTransaction(preparedTx), {

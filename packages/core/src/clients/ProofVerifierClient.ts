@@ -1,4 +1,6 @@
 import { rpc, xdr, nativeToScVal, Keypair, Networks } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
+import { toISigner } from "../signer/KeypairSigner";
 import { BaseContractWrapper } from "../adapters/BaseContractWrapper";
 import { ClientOptions, ProofStruct, VerificationKeyInfo } from "./types";
 
@@ -14,7 +16,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     proof: ProofStruct,
     publicInputs: string[],
     verificationKeyId: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<boolean> {
     const args: xdr.ScVal[] = [
@@ -29,14 +31,14 @@ export class ProofVerifierClient extends BaseContractWrapper {
       nativeToScVal(verificationKeyId, { type: "u32" }),
     ];
 
-    const result = await this.invoke("verify", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("verify", args, toISigner(signer), network ?? this.networkPassphrase);
     return result.b() === true;
   }
 
   async addVerificationKey(
     vk: string,
     description: string,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
     const isHex = /^[0-9a-fA-F]+$/.test(vk) && vk.length % 2 === 0;
@@ -99,7 +101,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
 
   async getVerificationKeyInfo(
     id: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<VerificationKeyInfo> {
     const args: xdr.ScVal[] = [nativeToScVal(id, { type: "u32" })];

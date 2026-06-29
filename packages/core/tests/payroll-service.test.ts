@@ -61,14 +61,16 @@ describe("PayrollService", () => {
         asset: "native",
       });
 
-      expect(mockWrapper.privatePay).toHaveBeenCalledWith(
-        "GABC123",
-        500n,
-        "native",
-        MOCK_PROOF,
-        signer,
-        Networks.TESTNET
-      );
+      const privatePayMock = mockWrapper.privatePay as jest.Mock;
+      const callArgs = privatePayMock.mock.calls[0];
+      expect(callArgs[0]).toBe("GABC123");
+      expect(callArgs[1]).toBe(500n);
+      expect(callArgs[2]).toBe("native");
+      expect(callArgs[3]).toEqual(MOCK_PROOF);
+      expect(callArgs[4]).toBeDefined();
+      expect(typeof callArgs[4].getPublicKey).toBe("function");
+      expect(typeof callArgs[4].sign).toBe("function");
+      expect(callArgs[5]).toBe(Networks.TESTNET);
     });
 
     it("returns a PaymentResult with txHash and publicSignals", async () => {
@@ -96,14 +98,15 @@ describe("PayrollService", () => {
         asset: "native",
       });
 
-      expect(mockWrapper.privatePay).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(BigInt),
-        expect.any(String),
-        expect.any(Object),
-        signer,
-        Networks.PUBLIC
-      );
+      const privatePayMock = mockWrapper.privatePay as jest.Mock;
+      const callArgs = privatePayMock.mock.calls[0];
+      expect(typeof callArgs[0]).toBe("string");
+      expect(typeof callArgs[1]).toBe("bigint");
+      expect(typeof callArgs[2]).toBe("string");
+      expect(typeof callArgs[3]).toBe("object");
+      expect(callArgs[4]).toBeDefined();
+      expect(typeof callArgs[4].getPublicKey).toBe("function");
+      expect(callArgs[5]).toBe(Networks.PUBLIC);
     });
 
     it("throws PayrollError(2002) when recipient is empty", async () => {
