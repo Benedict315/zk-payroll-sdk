@@ -1,4 +1,6 @@
 import { rpc, xdr, nativeToScVal, Keypair, Networks } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
+import { toISigner } from "../signer/KeypairSigner";
 import { BaseContractWrapper } from "../adapters/BaseContractWrapper";
 import { ClientOptions, ProofStruct, VerificationKeyInfo } from "./types";
 
@@ -18,7 +20,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     proof: ProofStruct,
     publicInputs: string[],
     verificationKeyId: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<boolean> {
     const args: xdr.ScVal[] = [
@@ -27,14 +29,14 @@ export class ProofVerifierClient extends BaseContractWrapper {
       nativeToScVal(verificationKeyId, { type: "u32" }),
     ];
 
-    const result = await this.invoke("verify", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("verify", args, toISigner(signer), network ?? this.networkPassphrase);
     return result.b() === true;
   }
 
   async addVerificationKey(
     vk: string,
     description: string,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
     const args: xdr.ScVal[] = [
@@ -42,53 +44,53 @@ export class ProofVerifierClient extends BaseContractWrapper {
       nativeToScVal(description, { type: "string" }),
     ];
 
-    const result = await this.invoke("add_verification_key", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("add_verification_key", args, toISigner(signer), network ?? this.networkPassphrase);
     return Number(result.u32());
   }
 
   async getVerificationKey(
     id: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<string> {
     const args: xdr.ScVal[] = [nativeToScVal(id, { type: "u32" })];
-    const result = await this.invoke("get_verification_key", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_verification_key", args, toISigner(signer), network ?? this.networkPassphrase);
     const bytes = result.bytes();
     return bytes ? Buffer.from(bytes).toString("hex") : "";
   }
 
   async setActiveVerificationKey(
     id: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<void> {
     const args: xdr.ScVal[] = [nativeToScVal(id, { type: "u32" })];
-    await this.invoke("set_active_verification_key", args, signer, network ?? this.networkPassphrase);
+    await this.invoke("set_active_verification_key", args, toISigner(signer), network ?? this.networkPassphrase);
   }
 
   async getActiveVerificationKeyId(
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
-    const result = await this.invoke("get_active_verification_key_id", [], signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_active_verification_key_id", [], toISigner(signer), network ?? this.networkPassphrase);
     return Number(result.u32());
   }
 
   async getVerificationKeyCount(
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
-    const result = await this.invoke("get_verification_key_count", [], signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_verification_key_count", [], toISigner(signer), network ?? this.networkPassphrase);
     return Number(result.u32());
   }
 
   async getVerificationKeyInfo(
     id: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<VerificationKeyInfo> {
     const args: xdr.ScVal[] = [nativeToScVal(id, { type: "u32" })];
-    const result = await this.invoke("get_verification_key_info", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_verification_key_info", args, toISigner(signer), network ?? this.networkPassphrase);
     return this.decodeVerificationKeyInfo(result);
   }
 

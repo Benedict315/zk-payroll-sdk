@@ -1,4 +1,6 @@
 import { rpc, xdr, nativeToScVal, Address, Keypair, Networks } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
+import { toISigner } from "../signer/KeypairSigner";
 import { BaseContractWrapper } from "../adapters/BaseContractWrapper";
 import {
   ClientOptions,
@@ -22,7 +24,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
 
   async commit(
     request: CommitRequest,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<void> {
     const args: xdr.ScVal[] = [
@@ -32,14 +34,14 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       nativeToScVal(request.cycleId, { type: "u64" }),
     ];
 
-    await this.invoke("commit", args, signer, network ?? this.networkPassphrase);
+    await this.invoke("commit", args, toISigner(signer), network ?? this.networkPassphrase);
   }
 
   async getCommitment(
     employer: string,
     employee: string,
     cycleId: bigint,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<CommitmentEntry> {
     const args: xdr.ScVal[] = [
@@ -48,14 +50,14 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       nativeToScVal(cycleId, { type: "u64" }),
     ];
 
-    const result = await this.invoke("get_commitment", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_commitment", args, toISigner(signer), network ?? this.networkPassphrase);
     return this.decodeCommitmentEntry(result);
   }
 
   async batchCommit(
     employer: string,
     commitments: BatchCommitItem[],
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<void> {
     const commitVec = xdr.ScVal.scvVec(
@@ -82,7 +84,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       commitVec,
     ];
 
-    await this.invoke("batch_commit", args, signer, network ?? this.networkPassphrase);
+    await this.invoke("batch_commit", args, toISigner(signer), network ?? this.networkPassphrase);
   }
 
   async verifyCommitment(
@@ -90,7 +92,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
     employee: string,
     cycleId: bigint,
     proof: ProofStruct,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<boolean> {
     const args: xdr.ScVal[] = [
@@ -100,7 +102,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       this.encodeProofStruct(proof),
     ];
 
-    const result = await this.invoke("verify_commitment", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("verify_commitment", args, toISigner(signer), network ?? this.networkPassphrase);
     return result.b() === true;
   }
 
@@ -109,7 +111,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
     employee: string,
     cycleId: bigint,
     actualAmount: bigint,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<void> {
     const args: xdr.ScVal[] = [
@@ -119,13 +121,13 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       nativeToScVal(actualAmount, { type: "i128" }),
     ];
 
-    await this.invoke("reveal_salary", args, signer, network ?? this.networkPassphrase);
+    await this.invoke("reveal_salary", args, toISigner(signer), network ?? this.networkPassphrase);
   }
 
   async getCommitmentCount(
     employer: string,
     employee: string,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
     const args: xdr.ScVal[] = [
@@ -133,7 +135,7 @@ export class SalaryCommitmentClient extends BaseContractWrapper {
       new Address(employee).toScVal(),
     ];
 
-    const result = await this.invoke("get_commitment_count", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke("get_commitment_count", args, toISigner(signer), network ?? this.networkPassphrase);
     return Number(result.u32());
   }
 

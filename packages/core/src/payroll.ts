@@ -1,4 +1,6 @@
 import { Keypair, Networks } from "@stellar/stellar-sdk";
+import type { ISigner } from "./signer/types";
+import { toISigner } from "./signer/KeypairSigner";
 import { PayrollContractWrapper } from "./adapters/PayrollContractWrapper";
 import { IProofGenerator, ProofPayload } from "./crypto/IProofGenerator";
 import { PayrollError, PayrollServiceErrorCode } from "./errors";
@@ -24,13 +26,17 @@ export interface FilterCriteria {
  * Sensitive fields (recipient, amount, asset) are never written to the log.
  */
 export class PayrollService {
+  private readonly signer: ISigner;
+
   constructor(
     private readonly contractWrapper: PayrollContractWrapper,
     private readonly proofGenerator: IProofGenerator,
-    private readonly signer: Keypair,
+    signer: Keypair | ISigner,
     private readonly network: string = Networks.TESTNET,
     private readonly logger?: SdkLogger
-  ) {}
+  ) {
+    this.signer = toISigner(signer);
+  }
 
   /**
    * Process a private payment by generating a ZK proof and submitting

@@ -1,4 +1,5 @@
 import { rpc, xdr, Keypair, Networks, StrKey, nativeToScVal, Address } from "@stellar/stellar-sdk";
+import type { ISigner } from "../src/signer/types";
 import { PayrollRegistryClient } from "../src/clients/PayrollRegistryClient";
 import { SalaryCommitmentClient } from "../src/clients/SalaryCommitmentClient";
 import { ProofVerifierClient } from "../src/clients/ProofVerifierClient";
@@ -93,7 +94,7 @@ function makeScheduledPaymentScVal(overrides?: Partial<Record<string, xdr.ScVal>
 class TestablePayrollRegistryClient extends PayrollRegistryClient {
   public invokeStub = jest.fn().mockResolvedValue(xdr.ScVal.scvVoid());
 
-  protected async invoke(method: string, args: xdr.ScVal[], signer: Keypair, network?: string): Promise<xdr.ScVal> {
+  protected async invoke(method: string, args: xdr.ScVal[], signer: ISigner, network?: string): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
 }
@@ -101,7 +102,7 @@ class TestablePayrollRegistryClient extends PayrollRegistryClient {
 class TestableSalaryCommitmentClient extends SalaryCommitmentClient {
   public invokeStub = jest.fn().mockResolvedValue(xdr.ScVal.scvVoid());
 
-  protected async invoke(method: string, args: xdr.ScVal[], signer: Keypair, network?: string): Promise<xdr.ScVal> {
+  protected async invoke(method: string, args: xdr.ScVal[], signer: ISigner, network?: string): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
 }
@@ -109,7 +110,7 @@ class TestableSalaryCommitmentClient extends SalaryCommitmentClient {
 class TestableProofVerifierClient extends ProofVerifierClient {
   public invokeStub = jest.fn().mockResolvedValue(xdr.ScVal.scvVoid());
 
-  protected async invoke(method: string, args: xdr.ScVal[], signer: Keypair, network?: string): Promise<xdr.ScVal> {
+  protected async invoke(method: string, args: xdr.ScVal[], signer: ISigner, network?: string): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
 }
@@ -117,7 +118,7 @@ class TestableProofVerifierClient extends ProofVerifierClient {
 class TestablePaymentExecutorClient extends PaymentExecutorClient {
   public invokeStub = jest.fn().mockResolvedValue(xdr.ScVal.scvVoid());
 
-  protected async invoke(method: string, args: xdr.ScVal[], signer: Keypair, network?: string): Promise<xdr.ScVal> {
+  protected async invoke(method: string, args: xdr.ScVal[], signer: ISigner, network?: string): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
 }

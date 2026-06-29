@@ -1,4 +1,5 @@
 import { rpc, xdr, Keypair, Networks, StrKey } from "@stellar/stellar-sdk";
+import type { ISigner } from "../src/signer/types";
 import { PayrollContractWrapper } from "../src/adapters/PayrollContractWrapper";
 import { ProofPayload } from "../src/crypto/IProofGenerator";
 
@@ -16,7 +17,7 @@ class TestablePayrollContractWrapper extends PayrollContractWrapper {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
+    signer: ISigner,
     network?: string
   ): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
@@ -39,12 +40,15 @@ const MOCK_PROOF: ProofPayload = {
 
 describe("PayrollContractWrapper", () => {
   let wrapper: TestablePayrollContractWrapper;
-  let signer: Keypair;
+  let signer: ISigner;
 
   beforeEach(() => {
     const mockServer = {} as rpc.Server;
     wrapper = new TestablePayrollContractWrapper(mockServer, TEST_CONTRACT_ID);
-    signer = Keypair.random();
+    signer = {
+      getPublicKey: jest.fn().mockResolvedValue(TEST_RECIPIENT),
+      sign: jest.fn().mockImplementation(async (tx) => tx),
+    };
   });
 
   describe("privatePay", () => {

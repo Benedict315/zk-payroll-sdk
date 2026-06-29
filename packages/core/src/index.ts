@@ -37,3 +37,6 @@ export * from "./clients";
 
 // ── Payroll Execution Summary ────────────────────────────────────────────────
 export * from "./summary";
+
+// ── Signer Abstraction ───────────────────────────────────────────────────────
+export * from "./signer";
