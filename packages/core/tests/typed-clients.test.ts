@@ -1,4 +1,5 @@
 import { rpc, xdr, Keypair, Networks, StrKey, nativeToScVal, Address } from "@stellar/stellar-sdk";
+import type { ISigner } from "../src/signer/types";
 import { PayrollRegistryClient } from "../src/clients/PayrollRegistryClient";
 import { SalaryCommitmentClient } from "../src/clients/SalaryCommitmentClient";
 import { ProofVerifierClient } from "../src/clients/ProofVerifierClient";
@@ -42,15 +43,13 @@ function makeRegistryEntryScVal(overrides?: Partial<Record<string, xdr.ScVal>>):
   };
   const merged = { ...defaults, ...overrides };
   return xdr.ScVal.scvMap(
-    Object.entries(merged).map(([key, val]) => {
-      if (val === undefined) {
-        throw new Error(`Value for key ${key} is undefined`);
-      }
-      return new xdr.ScMapEntry({
-        key: nativeToScVal(key, { type: "symbol" }),
-        val,
-      });
-    })
+    Object.entries(merged).map(
+      ([key, val]) =>
+        new xdr.ScMapEntry({
+          key: nativeToScVal(key, { type: "symbol" }),
+          val: val!,
+        })
+    )
   );
 }
 
@@ -58,7 +57,7 @@ function makeCommitmentEntryScVal(overrides?: Partial<Record<string, xdr.ScVal>>
   const defaults: Record<string, xdr.ScVal> = {
     employer: new Address(TEST_EMPLOYER).toScVal(),
     employee: new Address(TEST_EMPLOYEE).toScVal(),
-    commitment_hash: nativeToScVal(Buffer.from("abcd", "hex"), { type: "bytes" }),
+    commitment_hash: nativeToScVal(new Uint8Array(Buffer.from("abcd", "hex")), { type: "bytes" }),
     cycle_id: nativeToScVal(1n, { type: "u64" }),
     created_at: nativeToScVal(100n, { type: "u64" }),
     revealed: xdr.ScVal.scvBool(false),
@@ -66,15 +65,13 @@ function makeCommitmentEntryScVal(overrides?: Partial<Record<string, xdr.ScVal>>
   };
   const merged = { ...defaults, ...overrides };
   return xdr.ScVal.scvMap(
-    Object.entries(merged).map(([key, val]) => {
-      if (val === undefined) {
-        throw new Error(`Value for key ${key} is undefined`);
-      }
-      return new xdr.ScMapEntry({
-        key: nativeToScVal(key, { type: "symbol" }),
-        val,
-      });
-    })
+    Object.entries(merged).map(
+      ([key, val]) =>
+        new xdr.ScMapEntry({
+          key: nativeToScVal(key, { type: "symbol" }),
+          val: val!,
+        })
+    )
   );
 }
 
@@ -93,15 +90,13 @@ function makeScheduledPaymentScVal(overrides?: Partial<Record<string, xdr.ScVal>
   };
   const merged = { ...defaults, ...overrides };
   return xdr.ScVal.scvMap(
-    Object.entries(merged).map(([key, val]) => {
-      if (val === undefined) {
-        throw new Error(`Value for key ${key} is undefined`);
-      }
-      return new xdr.ScMapEntry({
-        key: nativeToScVal(key, { type: "symbol" }),
-        val,
-      });
-    })
+    Object.entries(merged).map(
+      ([key, val]) =>
+        new xdr.ScMapEntry({
+          key: nativeToScVal(key, { type: "symbol" }),
+          val: val!,
+        })
+    )
   );
 }
 
@@ -113,8 +108,8 @@ class TestablePayrollRegistryClient extends PayrollRegistryClient {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
-    network?: string
+    signer: ISigner,
+    network: string = Networks.TESTNET
   ): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
@@ -126,8 +121,8 @@ class TestableSalaryCommitmentClient extends SalaryCommitmentClient {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
-    network?: string
+    signer: ISigner,
+    network: string = Networks.TESTNET
   ): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
@@ -139,8 +134,8 @@ class TestableProofVerifierClient extends ProofVerifierClient {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
-    network?: string
+    signer: ISigner,
+    network: string = Networks.TESTNET
   ): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
@@ -152,8 +147,8 @@ class TestablePaymentExecutorClient extends PaymentExecutorClient {
   protected async invoke(
     method: string,
     args: xdr.ScVal[],
-    signer: Keypair,
-    network?: string
+    signer: ISigner,
+    network: string = Networks.TESTNET
   ): Promise<xdr.ScVal> {
     return this.invokeStub(method, args, signer, network);
   }
@@ -473,7 +468,9 @@ describe("ProofVerifierClient", () => {
   describe("getVerificationKey", () => {
     it("calls invoke with method name 'get_verification_key'", async () => {
       const keyBytes = Buffer.from("deadbeef", "hex");
-      client.invokeStub.mockResolvedValue(nativeToScVal(keyBytes, { type: "bytes" }));
+      client.invokeStub.mockResolvedValue(
+        nativeToScVal(new Uint8Array(keyBytes), { type: "bytes" })
+      );
       const key = await client.getVerificationKey(1, signer);
       expect(client.invokeStub.mock.calls[0][0]).toBe("get_verification_key");
       expect(key).toBe("deadbeef");
@@ -518,7 +515,7 @@ describe("ProofVerifierClient", () => {
         }),
         new xdr.ScMapEntry({
           key: nativeToScVal("key", { type: "symbol" }),
-          val: nativeToScVal(Buffer.from("ff00", "hex"), { type: "bytes" }),
+          val: nativeToScVal(new Uint8Array(Buffer.from("ff00", "hex")), { type: "bytes" }),
         }),
       ]);
       client.invokeStub.mockResolvedValue(infoScVal);
@@ -558,7 +555,7 @@ describe("PaymentExecutorClient", () => {
   describe("execute", () => {
     it("calls invoke with method name 'execute'", async () => {
       client.invokeStub.mockResolvedValue(
-        nativeToScVal(Buffer.from("txhash", "hex"), { type: "bytes" })
+        nativeToScVal(new Uint8Array(Buffer.from("txhash", "hex")), { type: "bytes" })
       );
       const result = await client.execute(
         { recipient: TEST_EMPLOYEE, amount: 1000n, asset: TEST_TOKEN },
@@ -570,7 +567,7 @@ describe("PaymentExecutorClient", () => {
 
     it("encodes four XDR arguments", async () => {
       client.invokeStub.mockResolvedValue(
-        nativeToScVal(Buffer.from("00", "hex"), { type: "bytes" })
+        nativeToScVal(new Uint8Array(Buffer.from("00", "hex")), { type: "bytes" })
       );
       await client.execute(
         { recipient: TEST_EMPLOYEE, amount: 1000n, asset: TEST_TOKEN, memo: "bonus" },

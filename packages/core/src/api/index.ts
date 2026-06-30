@@ -4,3 +4,18 @@ export { PayrollContract } from "../contract";
 export { DEFAULT_CONFIG } from "../config";
 export type { ClientConfig } from "../config";
 export * from "../types";
+
+export {
+  getContractMetadata,
+  isKnownEnvironment,
+  listKnownEnvironments,
+  validateContractMetadata,
+  buildClientConfig,
+  KNOWN_ENVIRONMENTS,
+} from "../metadata";
+export type {
+  ContractMetadata,
+  KnownEnvironment,
+  MetadataValidationResult,
+  MetadataValidationError,
+} from "../metadata";

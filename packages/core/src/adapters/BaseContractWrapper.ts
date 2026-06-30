@@ -1,12 +1,5 @@
-import {
-  rpc,
-  Contract,
-  TransactionBuilder,
-  Networks,
-  BASE_FEE,
-  xdr,
-  Keypair,
-} from "@stellar/stellar-sdk";
+import { rpc, Contract, TransactionBuilder, Networks, BASE_FEE, xdr } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
 import { ContractExecutionError, ContractErrorCode, mapRpcError } from "../errors";
 import { RunIdentifier } from "../core/run-identifier";
 
@@ -28,8 +21,17 @@ const MAX_POLLS = 15;
  * Subclasses only need to call `this.invoke(method, args)` and handle
  * the typed return value — no RPC plumbing required.
  */
+export interface InvokeOptions {
+  /**
+   * Optional idempotency key for transaction submission.
+   * Duplicate keys replay the same in-flight/completed submission result.
+   */
+  idempotencyKey?: string;
+}
+
 export abstract class BaseContractWrapper {
   protected readonly contract: Contract;
+  private readonly submissionIdempotency = new IdempotencyRegistry<xdr.ScVal>();
 
   constructor(
     protected readonly server: rpc.Server,
@@ -66,7 +68,11 @@ export abstract class BaseContractWrapper {
 
     try {
       // ── 1. Load the source account ─────────────────────────────────────
-      const account = await this.server.getAccount(signer.publicKey());
+      const pubKey = await signer.getPublicKey();
+      const account = await withRetry(() => this.server.getAccount(pubKey), {
+        attempts: 3,
+        delayMs: 100,
+      });
 
       // ── 2. Build the raw transaction ───────────────────────────────────
       const rawTx = new TransactionBuilder(account, {
@@ -78,7 +84,10 @@ export abstract class BaseContractWrapper {
         .build();
 
       // ── 3. Simulate to obtain resource footprint + auth entries ────────
-      const simResult = await this.server.simulateTransaction(rawTx);
+      const simResult = await withRetry(() => this.server.simulateTransaction(rawTx), {
+        attempts: 3,
+        delayMs: 100,
+      });
 
       if (rpc.Api.isSimulationError(simResult)) {
         throw new ContractExecutionError(
@@ -91,10 +100,13 @@ export abstract class BaseContractWrapper {
       // ── 4. Assemble: attach footprint and authorisation from simulation ─
       const preparedTx = rpc.assembleTransaction(rawTx, simResult).build();
 
-      preparedTx.sign(signer);
+      await signer.sign(preparedTx);
 
       // ── 5. Submit ──────────────────────────────────────────────────────
-      const sendResult = await this.server.sendTransaction(preparedTx);
+      const sendResult = await withRetry(() => this.server.sendTransaction(preparedTx), {
+        attempts: 3,
+        delayMs: 100,
+      });
 
       if (sendResult.status === "ERROR") {
         throw new ContractExecutionError(
@@ -113,6 +125,12 @@ export abstract class BaseContractWrapper {
       if (err instanceof ContractExecutionError) throw err;
       throw mapRpcError(err, { requestId: reqId });
     }
+
+    return this.submissionIdempotency.execute(
+      `${this.contractId}:${method}:${idempotencyKey}`,
+      runInvocation,
+      { cacheErrors: false }
+    );
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────
@@ -129,7 +147,10 @@ export abstract class BaseContractWrapper {
     for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
       await sleep(POLL_INTERVAL_MS);
 
-      const statusResult = await this.server.getTransaction(txHash);
+      const statusResult = await withRetry(() => this.server.getTransaction(txHash), {
+        attempts: 3,
+        delayMs: 100,
+      });
 
       if (statusResult.status === rpc.Api.GetTransactionStatus.SUCCESS) {
         if (!statusResult.returnValue) {

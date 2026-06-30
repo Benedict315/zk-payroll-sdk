@@ -1,4 +1,6 @@
 import { rpc, xdr, nativeToScVal, Keypair, Networks } from "@stellar/stellar-sdk";
+import type { ISigner } from "../signer/types";
+import { toISigner } from "../signer/KeypairSigner";
 import { BaseContractWrapper } from "../adapters/BaseContractWrapper";
 import { ClientOptions, ProofStruct, VerificationKeyInfo } from "./types";
 
@@ -14,46 +16,47 @@ export class ProofVerifierClient extends BaseContractWrapper {
     proof: ProofStruct,
     publicInputs: string[],
     verificationKeyId: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<boolean> {
     const args: xdr.ScVal[] = [
       this.encodeProofStruct(proof),
       xdr.ScVal.scvVec(
         publicInputs.map((s) => {
-          const buf =
-            /^[0-9a-fA-F]+$/.test(s) && s.length % 2 === 0
-              ? Buffer.from(s, "hex")
-              : Buffer.from(s, "utf-8");
-          return nativeToScVal(buf, { type: "bytes" });
+          const isHex = /^[0-9a-fA-F]+$/.test(s) && s.length % 2 === 0;
+          const buf = isHex ? Buffer.from(s, "hex") : Buffer.from(s, "utf-8");
+          return nativeToScVal(new Uint8Array(buf), { type: "bytes" });
         })
       ),
       nativeToScVal(verificationKeyId, { type: "u32" }),
     ];
 
-    const result = await this.invoke("verify", args, signer, network ?? this.networkPassphrase);
+    const result = await this.invoke(
+      "verify",
+      args,
+      toISigner(signer),
+      network ?? this.networkPassphrase
+    );
     return result.b() === true;
   }
 
   async addVerificationKey(
     vk: string,
     description: string,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<number> {
-    const vkBuf =
-      /^[0-9a-fA-F]+$/.test(vk) && vk.length % 2 === 0
-        ? Buffer.from(vk, "hex")
-        : Buffer.from(vk, "utf-8");
+    const isHex = /^[0-9a-fA-F]+$/.test(vk) && vk.length % 2 === 0;
+    const vkBuffer = isHex ? Buffer.from(vk, "hex") : Buffer.from(vk, "utf-8");
     const args: xdr.ScVal[] = [
-      nativeToScVal(vkBuf, { type: "bytes" }),
+      nativeToScVal(new Uint8Array(vkBuffer), { type: "bytes" }),
       nativeToScVal(description, { type: "string" }),
     ];
 
     const result = await this.invoke(
       "add_verification_key",
       args,
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
     return Number(result.u32());
@@ -64,7 +67,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     const result = await this.invoke(
       "get_verification_key",
       args,
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
     const bytes = result.bytes();
@@ -76,7 +79,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     await this.invoke(
       "set_active_verification_key",
       args,
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
   }
@@ -85,7 +88,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     const result = await this.invoke(
       "get_active_verification_key_id",
       [],
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
     return Number(result.u32());
@@ -95,7 +98,7 @@ export class ProofVerifierClient extends BaseContractWrapper {
     const result = await this.invoke(
       "get_verification_key_count",
       [],
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
     return Number(result.u32());
@@ -103,14 +106,14 @@ export class ProofVerifierClient extends BaseContractWrapper {
 
   async getVerificationKeyInfo(
     id: number,
-    signer: Keypair,
+    signer: Keypair | ISigner,
     network?: string
   ): Promise<VerificationKeyInfo> {
     const args: xdr.ScVal[] = [nativeToScVal(id, { type: "u32" })];
     const result = await this.invoke(
       "get_verification_key_info",
       args,
-      signer,
+      toISigner(signer),
       network ?? this.networkPassphrase
     );
     return this.decodeVerificationKeyInfo(result);
