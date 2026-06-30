@@ -1,14 +1,7 @@
 import { IProofGenerator, ProofPayload, ProofGeneratorConfig } from "./IProofGenerator";
-import { WorkerRequest, WorkerResponse, ProofProgressStage } from "./WorkerMessages";
+import { WorkerRequest, WorkerResponse } from "./WorkerMessages";
 import { PayrollError } from "../errors";
-
-/**
- * Callback invoked as the worker reports proof generation progress.
- *
- * @param stage    - Current stage of work inside the worker
- * @param progress - Optional 0-100 completion percentage
- */
-export type ProofProgressCallback = (stage: ProofProgressStage, progress?: number) => void;
+import type { PayrollProgressCallback } from "../progress";
 
 /**
  * Options for WorkerProofGenerator.
@@ -18,7 +11,7 @@ export interface WorkerProofOptions {
    * Global progress handler applied to every generateProof call unless
    * overridden by the per-call onProgress argument.
    */
-  onProgress?: ProofProgressCallback;
+  onProgress?: PayrollProgressCallback;
   /**
    * Maximum milliseconds to wait for the worker to respond before
    * rejecting with a timeout error. Defaults to 120 000 ms (2 minutes).
@@ -43,7 +36,7 @@ export interface WorkerLike {
 interface PendingRequest {
   resolve: (payload: ProofPayload) => void;
   reject: (err: Error) => void;
-  onProgress?: ProofProgressCallback;
+  onProgress?: PayrollProgressCallback;
   timer: ReturnType<typeof setTimeout>;
 }
 
@@ -114,7 +107,7 @@ export class WorkerProofGenerator implements IProofGenerator {
         break;
 
       case "PROGRESS":
-        pending.onProgress?.(msg.stage, msg.progress);
+        pending.onProgress?.(msg.event);
         break;
 
       case "PRELOAD_DONE":
@@ -140,6 +133,10 @@ export class WorkerProofGenerator implements IProofGenerator {
   // ── Dispatch helper ────────────────────────────────────────────────────────
 
   private dispatch(req: WorkerRequest, onProgress?: ProofProgressCallback): Promise<ProofPayload> {
+  private dispatch(
+    req: WorkerRequest,
+    onProgress?: PayrollProgressCallback
+  ): Promise<ProofPayload> {
     return new Promise<ProofPayload>((resolve, reject) => {
       const timeoutMs = this.options.timeoutMs ?? 120_000;
       const timer = setTimeout(() => {
@@ -173,7 +170,7 @@ export class WorkerProofGenerator implements IProofGenerator {
    */
   generateProof(
     witness: Record<string, unknown>,
-    onProgress?: ProofProgressCallback
+    onProgress?: PayrollProgressCallback
   ): Promise<ProofPayload> {
     return this.dispatch(
       { type: "GENERATE_PROOF", id: this.nextId(), witness, config: this.config },

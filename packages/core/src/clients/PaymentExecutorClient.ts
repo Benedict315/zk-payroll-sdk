@@ -9,7 +9,13 @@ import {
   ScheduledPayment,
 } from "./types";
 
+/**
+ * Result returned after successfully submitting a payroll payment.
+ */
 export interface ExecutePaymentResponse {
+  /**
+   * Transaction hash of the submitted payment.
+   */
   txHash: string;
 }
 
