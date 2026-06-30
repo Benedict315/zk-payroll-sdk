@@ -27,8 +27,12 @@ export type PayrollServiceErrorCode =
  * @deprecated Use `ZkPayrollError` instead.
  */
 export class PayrollError extends ZkPayrollError {
-  constructor(message: string, code: number) {
-    super(message, String(code));
+  constructor(message: string, code: any, context: Record<string, any> = {}) {
+    let sanitizedCode = code;
+    if (typeof code === "number" && code < 2000) {
+      sanitizedCode = String(code);
+    }
+    super(message, sanitizedCode, context);
     this.name = "PayrollError";
     (this as unknown as { code: number }).code = code;
   }
@@ -36,6 +40,5 @@ export class PayrollError extends ZkPayrollError {
 
 /** @deprecated Use structured error logging instead. */
 export function handleApiError(error: unknown): void {
-  // eslint-disable-next-line no-console
   console.error("API Error:", error);
 }
