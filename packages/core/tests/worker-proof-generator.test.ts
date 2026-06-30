@@ -298,7 +298,7 @@ describe("WorkerProofGenerator", () => {
     });
 
     it("rejects all pending requests with PayrollError", async () => {
-      const { worker, generator } = setup();
+      const { generator } = setup();
       const p1 = generator.generateProof({ amount: 100n });
       const p2 = generator.generateProof({ amount: 200n });
 

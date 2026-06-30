@@ -132,6 +132,7 @@ export class WorkerProofGenerator implements IProofGenerator {
 
   // ── Dispatch helper ────────────────────────────────────────────────────────
 
+  private dispatch(req: WorkerRequest, onProgress?: ProofProgressCallback): Promise<ProofPayload> {
   private dispatch(
     req: WorkerRequest,
     onProgress?: PayrollProgressCallback
