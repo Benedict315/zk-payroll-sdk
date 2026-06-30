@@ -50,6 +50,25 @@ export * from "./testing";
 export { TransactionWatcher } from "./events";
 export type { ConfirmationOptions, ConfirmationResult } from "./events";
 
+// ── Event Stream Parser ──────────────────────────────────────────────────────
+export {
+  parseContractEvent,
+  parseContractEvents,
+  EventParsingError,
+} from "./event-parser";
+export type {
+  RawContractEvent,
+  TypedContractEvent,
+  RegisteredEvent,
+  RegistryUpdatedEvent,
+  RegistryDeactivatedEvent,
+  CommittedEvent,
+  SalaryRevealedEvent,
+  PaymentExecutedEvent,
+  PaymentScheduledEvent,
+  PaymentCancelledEvent,
+} from "./event-parser";
+
 // ── Typed Contract Clients ───────────────────────────────────────────────────
 export * from "./clients";
 
