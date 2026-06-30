@@ -1,13 +1,3 @@
-export const PayrollServiceErrorCode = {
-  PROOF_GENERATION_FAILED: 2001,
-  INVALID_RECIPIENT: 2002,
-  INVALID_AMOUNT: 2003,
-  INVALID_ASSET: 2004,
-} as const;
-
-export type PayrollServiceErrorCode =
-  (typeof PayrollServiceErrorCode)[keyof typeof PayrollServiceErrorCode];
-
 export {
   ZkPayrollError,
   NetworkError,
@@ -19,14 +9,30 @@ export {
 } from "./core/errors";
 export type { ErrorContext, ContractErrorCodeType } from "./core/errors";
 
+// ── Backward-compatible aliases ─────────────────────────────────────────────
 import { ZkPayrollError } from "./core/errors";
 
-/** @deprecated Use `ZkPayrollError` instead. */
+/** Error codes for PayrollService validation/orchestration failures */
+export const PayrollServiceErrorCode = {
+  PROOF_GENERATION_FAILED: 2001,
+  INVALID_RECIPIENT: 2002,
+  INVALID_AMOUNT: 2003,
+  INVALID_ASSET: 2004,
+} as const;
+
+export type PayrollServiceErrorCode =
+  (typeof PayrollServiceErrorCode)[keyof typeof PayrollServiceErrorCode];
+
+/**
+ * @deprecated Use `ZkPayrollError` instead.
+ */
 export class PayrollError extends ZkPayrollError {
   constructor(message: string, code: number) {
     super(message, String(code));
     this.name = "PayrollError";
   }
+
+  return new ContractExecutionError(message, code, context);
 }
 
 /** @deprecated Use structured error logging instead. */
