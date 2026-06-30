@@ -275,5 +275,28 @@ describe("TransactionWatcher", () => {
       expect(emittedError).not.toBeNull();
       expect(emittedError!.message).toBe("RPC down");
     });
+
+    it("emits 'cancelled' when polling is aborted", async () => {
+      const server = createMockServer([NOT_FOUND_RESPONSE]);
+      const watcher = new TransactionWatcher(server);
+      const controller = new AbortController();
+      let cancelledData: unknown = null;
+
+      watcher.on("cancelled", (data) => {
+        cancelledData = data;
+      });
+
+      controller.abort();
+      await watcher
+        .waitForConfirmation("tx_hash", {
+          pollIntervalMs: 10,
+          signal: controller.signal,
+        })
+        .catch(() => {});
+
+      expect(cancelledData).toMatchObject({
+        txHash: "tx_hash",
+      });
+    });
   });
 });

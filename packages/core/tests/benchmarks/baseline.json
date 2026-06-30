@@ -26,7 +26,7 @@
       "peakHeapUsedMB": 313.681396484375,
       "avgArrayBuffersDeltaMB": 6.67572021484375,
       "avgExternalDeltaMB": 6.67572021484375,
-      "avgDurationMs": 0
+      "avgDurationMs": 1
     },
     {
       "scenario": "cold_artifact_large",
@@ -71,7 +71,7 @@
       "peakHeapUsedMB": 304.5618896484375,
       "avgArrayBuffersDeltaMB": 6.67572021484375,
       "avgExternalDeltaMB": 6.67572021484375,
-      "avgDurationMs": 0.3333333333333333
+      "avgDurationMs": 12.666666666666666
     },
     {
       "scenario": "warm_proof",
@@ -82,7 +82,7 @@
       "peakHeapUsedMB": 304.6920700073242,
       "avgArrayBuffersDeltaMB": 0,
       "avgExternalDeltaMB": 0,
-      "avgDurationMs": 0
+      "avgDurationMs": 0.2
     },
     {
       "scenario": "concurrent_cold_2",
@@ -94,10 +94,10 @@
       "avgExternalDeltaMB": -17.799134254455566,
       "avgDurationMs": 98
       "avgHeapDeltaMB": 0.008270263671875,
-      "peakHeapUsedMB": 305.1037826538086,
+      "peakHeapUsedMB": 414.8177947998047,
       "avgArrayBuffersDeltaMB": 2.86102294921875,
       "avgExternalDeltaMB": 2.86102294921875,
-      "avgDurationMs": 2.6666666666666665
+      "avgDurationMs": 24.333333333333332
     },
     {
       "scenario": "concurrent_cold_5",

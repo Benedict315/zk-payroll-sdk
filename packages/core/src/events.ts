@@ -57,6 +57,8 @@ export type TransactionWatcherEvents = {
   confirmed: [ConfirmationResult];
   /** Emitted when polling times out */
   timeout: [{ txHash: string; attempts: number }];
+  /** Emitted when polling is cancelled via AbortSignal */
+  cancelled: [{ txHash: string }];
   /** Emitted on unexpected errors during polling */
   error: [Error];
 };
@@ -90,9 +92,10 @@ export class TransactionWatcher extends EventEmitter {
    * reaches a terminal state (SUCCESS or FAILED), or times out.
    *
    * @param txHash  - The transaction hash to watch
-   * @param options - Polling configuration
+   * @param options - Polling configuration including optional AbortSignal
    * @returns Promise resolving to the confirmation result
    * @throws ContractExecutionError on transaction failure or timeout
+   * @throws Error if cancelled via AbortSignal
    */
   async waitForConfirmation(
     txHash: string,
@@ -100,11 +103,25 @@ export class TransactionWatcher extends EventEmitter {
   ): Promise<ConfirmationResult> {
     const pollInterval = options?.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
     const maxPolls = options?.maxPolls ?? DEFAULT_MAX_POLLS;
+    const signal = options?.signal;
+
+    if (signal?.aborted) {
+      this.emit("cancelled", { txHash });
+      throw new Error(`Polling for transaction ${txHash} was cancelled.`);
+    }
 
     const requestId = options?.requestId;
 
     for (let attempt = 1; attempt <= maxPolls; attempt++) {
-      await sleep(pollInterval);
+      try {
+        await sleep(pollInterval, signal);
+      } catch (err: any) {
+        if (err.message === "AbortError") {
+          this.emit("cancelled", { txHash });
+          throw new Error(`Polling for transaction ${txHash} was cancelled.`);
+        }
+        throw err;
+      }
 
       this.emit("polling", { txHash, attempt, maxPolls, requestId });
 
@@ -158,6 +175,31 @@ export class TransactionWatcher extends EventEmitter {
   }
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      return reject(new Error("AbortError"));
+    }
+
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, ms);
+
+    const onAbort = () => {
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error("AbortError"));
+    };
+
+    if (signal) {
+      signal.addEventListener("abort", onAbort);
+    }
+
+    function cleanup() {
+      if (signal) {
+        signal.removeEventListener("abort", onAbort);
+      }
+    }
+  });
 }
