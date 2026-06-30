@@ -1,34 +1,40 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/**
- * Core base error class matching legacy naming context under inheritance checks.
- */
-export class ZkPayrollError extends Error {
-  public code: any;
-  public context: Record<string, any>;
+export {
+  ZkPayrollError,
+  NetworkError,
+  ProofGenerationError,
+  ContractExecutionError,
+  ValidationError,
+  ContractErrorCode,
+  mapRpcError,
+} from "./core/errors";
+export type { ErrorContext, ContractErrorCodeType } from "./core/errors";
 
-  constructor(message: string, code: any, context: Record<string, any> = {}) {
-    super(message);
-    this.name = "ZkPayrollError";
-    this.code = code;
-    this.context = context;
-  }
-}
+// ── Backward-compatible aliases ─────────────────────────────────────────────
+import { ZkPayrollError } from "./core/errors";
+
+/** Error codes for PayrollService validation/orchestration failures */
+export const PayrollServiceErrorCode = {
+  PROOF_GENERATION_FAILED: 2001,
+  INVALID_RECIPIENT: 2002,
+  INVALID_AMOUNT: 2003,
+  INVALID_ASSET: 2004,
+} as const;
+
+export type PayrollServiceErrorCode =
+  (typeof PayrollServiceErrorCode)[keyof typeof PayrollServiceErrorCode];
 
 /**
- * Backward compatibility class alias target matching internal inheritance criteria.
  * @deprecated Use `ZkPayrollError` instead.
  */
 export class PayrollError extends ZkPayrollError {
   constructor(message: string, code: any, context: Record<string, any> = {}) {
-    // Legacy backward-compat test expects generic integers to turn into strings (e.g. 1001 -> "1001").
-    // Meanwhile, PayrollService tests expect service validation codes (2001-2004) to stay numbers.
     let sanitizedCode = code;
     if (typeof code === "number" && code < 2000) {
       sanitizedCode = String(code);
     }
-
     super(message, sanitizedCode, context);
     this.name = "PayrollError";
+    (this as unknown as { code: number }).code = code;
   }
 }
 
@@ -164,6 +170,5 @@ export function mapRpcError(error: any, context: Record<string, any> = {}): Cont
 
 /** @deprecated Use structured error logging instead. */
 export function handleApiError(error: unknown): void {
-  // eslint-disable-next-line no-console
   console.error("API Error:", error);
 }
